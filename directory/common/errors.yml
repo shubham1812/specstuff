@@ -1,0 +1,47 @@
+---
+responses:
+  InvalidRequest:
+    description: One or more request parameters are invalid
+    content:
+      application/json:
+        schema: { $ref: '#/schemas/Error' }
+
+  NotAuthorizedOrNotFound:
+    description: The client is not authorized to access the requested resource, or the request did not match any resources
+    content:
+      application/json:
+        schema: { $ref: '#/schemas/Error' }
+
+  NotAllowed:
+    description: The requested operation is not permitted on the resource in its current lifecycle-state
+    content:
+      application/json:
+        schema: { $ref: '#/schemas/Error' }
+
+  Conflict:
+    description: The requested operation was superseded by another operation and could not be completed
+    content:
+      application/json:
+        schema: { $ref: '#/schemas/Error' }
+
+  InternalServerError:
+    description: The requested operation had a server-side error
+    content:
+      application/json:
+        schema: { $ref: '#/schemas/Error' }
+
+schemas:
+  Error:
+    type: object
+    description: Error response content
+    properties:
+      code:
+        type: number
+      status:
+        type: string
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: string
