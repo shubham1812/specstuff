@@ -1,0 +1,129 @@
+---
+openapi: 3.0.3
+info:
+  title: Midwife Service
+  version: 0.1.0
+tags:
+  - name: Midwife
+paths:
+  /alive:
+    get:
+      summary: Returns the health of midwife-svc
+      description: Will return OK status if the midwife-svc is running
+      tags:
+        - Midwife
+      responses:
+        200:
+          description: Returns when the midwife service is alive
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+        500: { $ref: 'common/errors.yml#/responses/InternalServerError' }
+
+  /firstboot/state:
+    put:
+      summary: Handles firstboot state reports, matching the SCCP API.
+      tags:
+        - Midwife
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FirstbootState' }
+      responses:
+        200:
+          description: Returns OK if the firstboot state was successfully logged
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+        400: { $ref: 'common/errors.yml#/responses/InvalidRequest' }
+        405: { $ref: 'common/errors.yml#/responses/NotAllowed' }
+
+  /sos:
+    post:
+      summary: Uploads sos report to the storage bucket in the region
+      tags:
+        - Midwife
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                report:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        200:
+          description: Returns the sos report metadata if the sos report was successfully uploaded to bucket
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SosMetadata' }
+        400: { $ref: 'common/errors.yml#/responses/InvalidRequest' }
+        405: { $ref: 'common/errors.yml#/responses/NotAllowed' }
+        500: { $ref: 'common/errors.yml#/responses/InternalServerError' }
+
+
+components:
+  schemas:
+    FirstbootState:
+      type: object
+      additionalProperties: false
+      properties:
+        code:
+          description: parsed by programs and mapped to an owner/ticket queue
+          type: string
+        level:
+          description: Lifecycle for grouping resources with nested dependencies and garbage-collection
+          type: string
+          enum:
+            - INFO
+            - ERROR
+            - WARN
+        message:
+          description: A succinct human-readable message to inform status
+          type: string
+        state:
+          description: transition state; display data for informational purpose
+          type: string
+        type:
+          description: ERROR request fails firstboot
+          type: string
+          enum:
+            - ERROR
+            - SUCCESS
+            - TRANSITION
+          required: true
+    SosMetadata:
+      type: object
+      properties:
+        forwarded_for:
+          description: X-Forwarded-For first entry eg. 172.16.172.16
+          type: string
+        forwarded_for_names:
+          description: Sorted DNS names for ForwardedFor
+          type: string
+        remote_addr:
+          description: Remote address of caller eg. load balancer
+          type: string
+        sos_report_id:
+          description: SOS report ID; key into cache or bucket
+          type: string
+        timestamp:
+          description: timestamp at which metadata was obtained
+          type: string
+        file_bytes:
+          description: bytes of payload only
+          type: string
+        file_count:
+          description: file count of payload only
+          type: string
+        writer:
+          description: writer name eg. objectstorage
+          type: string
